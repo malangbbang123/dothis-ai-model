@@ -8,7 +8,7 @@ def hashtag_extraction(data):
 
 def clean_text(data): 
     # 문자열을 리스트로 변환
-    word_list = ast.literal_eval(data)
+    word_list = data.split(" ")
     # 리스트의 항목들을 띄어쓰기로 묶어서 하나의 문장으로 표현
     result = ' '.join(re.sub(r'[^a-zA-Z0-9가-힣\s]', '', word) for word in word_list)
     return result
@@ -30,10 +30,10 @@ def safe_extract_hashtag(description):
         return hashtag_extraction(description)
     except Exception as e:
         print(f"Error processing: {description}. Error: {e}")
-        return None  # 또는 적절한 기본값
+        return description  # 또는 적절한 기본값
 
 def safe_clean_text(data):
     try:
         return clean_text(data)
     except Exception as e:
-        return None
+        return data
