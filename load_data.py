@@ -38,9 +38,19 @@ conn = pymysql.connect(host=host,
 cursor = conn.cursor()
 
 column_list = ["vd.video_id", "vd.channel_id", "vd.video_title", "vd.video_tags", "vd.video_description", "vd.video_cluster", "vh.video_views", "vh.video_performance", "vd.video_published"]
-video_id = []
+# column_list = ["ch.channel_id", "ch.channel_subscribers", "ch.channel_average_views"]
+video_id_list = []
+
+# 파일 열기 및 읽기
+with open("/home/bailey/workspace/channel_ids.txt", 'r') as file:
+    # 파일의 각 줄 읽기
+    for line in file:
+        # 줄의 끝에 있는 개행 문자 제거 및 쉼표로 분리
+        ids = line.strip().split(',')
+        # id를 리스트에 추가
+        video_id_list.extend(ids)
 idx = 0 
-for date in date_list[4:]:
+for date in date_list[30:]:
     if os.path.isfile(f"./test/df_{date}.csv"):
         continue
     df = pd.DataFrame()
@@ -50,11 +60,13 @@ for date in date_list[4:]:
             cluster = str(cluster).zfill(2)
         sql_query = f"""
                 SELECT vd.video_id, vd.channel_id, vd.video_title, vd.video_tags, vd.video_description, vd.video_cluster, vh.video_views, vh.video_performance, vd.video_published
-                #  ch.channel_subscribers, ch.channel_average_views
+                #  SELECT ch.channel_id, ch.channel_subscribers, ch.channel_average_views
                 FROM dothis_svc.video_data_{cluster} AS vd
+                # FROM dothis_svc.channel_history_{yearmonth} AS ch
                 JOIN dothis_svc.video_history_{cluster}_{yearmonth} AS vh ON vh.video_id = vd.video_id
                 # JOIN dothis_svc.channel_history_{yearmonth} AS ch ON ch.channel_id = vd.channel_id
                 WHERE vd.video_published = '{date}' AND vh.video_views > 1000
+                # WHERE ch.channel_id in ({', '.join([f"'{id}'" for id in video_id_list])})
                 ;"""
         cursor.execute(sql_query)
         for row in (cursor):
@@ -63,7 +75,7 @@ for date in date_list[4:]:
             idx += 1
     if not df.empty:
         df['vd.hashtag'] = df['vd.video_description'].apply(lambda x: safe_extract_hashtag(x))
-        # df['vd.hashtag'] = df['vd.hashtag'].apply(lambda x: safe_clean_text(x))
+        df['vd.hashtag'] = df['vd.hashtag'].apply(lambda x: safe_clean_text(x))
         df['vd.video_tags'] = df['vd.video_tags'].apply(lambda x: safe_clean_text(x))
         df.drop('vd.video_description', axis=1, inplace=True)
         latest_data(df, path=f"./test/df_{date}.csv")
