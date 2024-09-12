@@ -37,3 +37,15 @@ def safe_clean_text(data):
         return clean_text(data)
     except Exception as e:
         return data
+
+def class_category(value):
+    if value >= 1000 and value < 10000:
+        value = value // 1000
+    elif value >= 10000 and value < 100000:
+        value = value // 10000
+    elif value >= 100000 and value < 1000000:
+        value = value // 100000
+    elif value >= 1000000:
+        value = 10
+   
+    return value
