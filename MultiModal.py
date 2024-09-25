@@ -179,48 +179,48 @@ if __name__ == "__main__":
     year = x.year
     day = x.day
     today = f"{year}-{month}-{day}"
-    df_list = glob.glob("/home/bailey/workspace/test/*.csv")
-    df = pd.DataFrame()
-    for i in df_list:
-        temp = pd.read_csv(i)
-        # temp = temp.dropna(how="any")
-        df = pd.concat((temp, df), axis=0)
+    # df_list = glob.glob("/home/bailey/workspace/test/*.csv")
+    # df = pd.DataFrame()
+    # for i in df_list:
+    #     temp = pd.read_csv(i)
+    #     # temp = temp.dropna(how="any")
+    #     df = pd.concat((temp, df), axis=0)
     
-    df_list = glob.glob("/home/bailey/workspace/test/*.csv")
-    df = pd.DataFrame()
-    for i in df_list:
-        temp = pd.read_csv(i)
-        video_id = temp["vd.channel_id"].tolist()
-        # channel_id.extend(video_id)
-        temp = temp.dropna(how="any")
-        df = pd.concat((temp, df), axis=0)
+    # df_list = glob.glob("/home/bailey/workspace/test/*.csv")
+    # df = pd.DataFrame()
+    # for i in df_list:
+    #     temp = pd.read_csv(i)
+    #     video_id = temp["vd.channel_id"].tolist()
+    #     # channel_id.extend(video_id)
+    #     temp = temp.dropna(how="any")
+    #     df = pd.concat((temp, df), axis=0)
 
 # df = df.groupby("vd.video_id").apply(lambda x: x.sort_values(by="vd.video_published").head(1))
+    df = pd.read_csv("/home/bailey/workspace/data.csv")
     df = df.sample(frac=1, random_state=1000)
-    
-    # df = df.groupby("video_id").apply(lambda x: x.sort_values(by="video_published").head(1))
-    # df['vd.hashtag'].apply(lambda x: preprocessing.clean_text(x))
-    # df['vd.hashtag'] = df['vd.hashtag'].fillna(df['vd.video_tags'])
+    print("Loaded Data .... ")
+    df = df.sort_values(by=['video_id', 'video_published'], ascending=[True, False])
+    df = df.drop_duplicates(subset="video_id", keep='first')
+    df['video_hashtags'] = (df['video_title']).apply(lambda x: preprocessing.hashtag_extraction(x))
     # nan값 삭제 
-    # df = df.dropna(how="any")
-    # df['vd.video_tags'] = df['vd.video_tags'].apply(lambda x: preprocessing.clean_text(x))
-    # df['video_hashtag'] = df['vd.hashtag'].apply(lambda x: preprocessing.clean_text(x))
-    # df['view_category'] = df['vh.video_views'].apply(categorize_views)
-    df['vh.video_views'] = df['vh.video_views'].astype("float")
-    df['video_category'] = df['vh.video_views'].apply(lambda x: preprocessing.class_category(x))
+    df = df.dropna(how="any")
+    df['video_tags'] = df['video_tags'].apply(lambda x: preprocessing.clean_text(x))
+    df['video_hashtag'] = df['video_hashtag'].apply(lambda x: preprocessing.clean_text(x))
+    df['view_category'] = df['video_views'].apply(categorize_views)
+    df['video_views'] = df['video_views'].astype("float")
+    df['video_category'] = df['video_views'].apply(lambda x: preprocessing.class_category(x))
     le = LabelEncoder()
     df['video_category'] = le.fit_transform(df['video_category'])
-
+    print("Done Preprocessed .... ")
     model_name = 'monologg/kobert'
     tokenizer = BertTokenizer.from_pretrained(model_name)
     model = MultimodalBertModel(bert_model_name=model_name, num_labels=5)  # 5개의 카테고리
-
+    print("Loaded Tokenizer .... ")
     df['text'] = df['vd.video_tags'] + " " + df['vd.video_title'] + " " + df['vd.hashtag']
 
     train_texts, test_texts, train_labels, test_labels = train_test_split(
         df['text'], df['video_category'], test_size=0.2, random_state=42)
-    
-    train_x, test_x = train_test_split(df, test_size=0.2, random_state=42)
+    train_subs, test_subs = train_test_split(df['channel_subscribers'], test_size=0.2, random_state=42)
 
     # 데이터셋 및 데이터로더 생성
     train_dataset = MultimodalDataset(train_texts, train_subs, train_labels, tokenizer, max_len=32)
@@ -238,7 +238,7 @@ if __name__ == "__main__":
     min_delta = 1e-16
     early_stopping = EarlyStopping(patience=patience, min_delta=min_delta)
     PATH = "/home/bailey/workspace/related_words/model/best_model/"
-    
+    print("Start Training .... ")
     for epoch in range(EPOCHS):
         print(f'Epoch {epoch + 1}/{EPOCHS}')
         print('-' * 10)
