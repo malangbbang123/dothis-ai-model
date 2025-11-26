@@ -42,13 +42,13 @@ dothis-ai-model/
 - YouTube 메타데이터 CSV (title, tags, upload_date, category, view_count 등) 준비  
 - `load_data.py`에서 경로 설정 후 실행 → 기본 정제된 DataFrame 생성  
 
-python load_data.py 
+- python load_data.py 
 
 ### 2. 피처 전처리 & 정제  
-python preprocessing.py
+- python preprocessing.py
 
 ### 3. 모델 학습 / 예측  
-python MultiModal.py
+- python MultiModal.py
 
 
 
