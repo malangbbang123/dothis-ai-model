@@ -8,6 +8,7 @@ YouTube 영상의 조회수(views)를 예측하는 **멀티모달 딥러닝 파�
 ## 📂 Repository Structure
 
 dothis-ai-model/
+
 │
 ├── load_data.py # raw 데이터 로딩 및 기본 전처리 스크립트
 ├── preprocessing.py # 피처 엔지니어링 및 데이터 정제 모듈
